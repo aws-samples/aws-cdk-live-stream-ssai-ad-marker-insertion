@@ -10,7 +10,7 @@ import { MediaLive } from './medialive';
 import { MediaTailor } from './mediatailor';
 import { CloudFront } from './cloudfront';
 import { AutoStartMediaLive } from './custom_ressources/medialive-autostart';
-import { AdMarkerLambda } from './custom_ressources/medialive-ad-marker-lambda';
+import { UpdateDemoWebsite } from './custom_ressources/s3-update-config-file';
 import { NagSuppressions } from 'cdk-nag';
 
 
@@ -76,6 +76,11 @@ export class MedialiveMediapackageMediaTailorCloudfrontStack extends cdk.Stack {
     /*
     * Final step: Generate Custom Ressource to update the config file for the DemoWebsite 👇
     */
+    const resource = new UpdateDemoWebsite(this, 'DemoResource', {
+      sessionURLHls: cloudfront.emtHlsSession,
+      sessionURLDash: cloudfront.emtDashSession,
+      s3Bucket: cloudfront.s3DemoBucket
+    });
 
 
     //👇Check if AutoStart is enabled in the MediaLive configuration to start MediaLive
@@ -83,11 +88,7 @@ export class MedialiveMediapackageMediaTailorCloudfrontStack extends cdk.Stack {
       const resource = new AutoStartMediaLive(this, 'AutoStartResource', {
         "mediaLiveChannel":mediaLiveChannel.channelLive.attrArn,
       });
-      
-      const lambda_resource = new AdMarkerLambda(this, 'AdMarkerResource', {
-        "mediaLiveChannel":mediaLiveChannel.channelLive.attrArn,
-      });
-      
+
       // Enable adding suppressions to child constructs
       NagSuppressions.addResourceSuppressions(
         resource,
